@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>KnockoutJS Demo</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <!-- Latest compiled and minified Bootstrap JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <!-- <script type="text/javascript" src="js/knockout-3.4.2.js"></script> -->
+    <script type="text/javascript" src="{{ url_for('static', filename='knockout-3.4.2.js') }}"></script>
+    
+    <!-- Latest compiled and minified Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+    <script type=text/javascript>
+        $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+    </script>
+</head>
+
+<body>
+<div class="container">
+    <!-- <div class="row">
+        <div class="col-md-12">
+            <h3>Tasks</h3>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <form class="form-inline" data-bind="submit: addTask">
+                <div class="form-group">
+                    <label> Add task: </label>
+                    <input data-bind="value: newTaskText" placeholder="What needs to be done?" class="form-control" aria-describedby="helpBlock"/>
+                    <button type="submit" class="btn btn-primary btn-sm">Add</button>
+                    <span id="helpBlock" class="help-block">A block of help text that breaks onto a new line and may extend beyond one line.</span>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <ul data-bind="foreach: tasks, visible: tasks().length > 0">
+                <div class="checkbox">
+                    <input type="checkbox" data-bind="checked: isDone" />
+                    <input  class="form-control" data-bind="value: title, disable: isDone" />
+                    <a href="#" data-bind="click: $parent.removeTask">Delete</a>
+                </div>
+            </ul>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <label> You have <b data-bind="text: incompleteTasks().length">&nbsp;</b> incomplete task(s)
+                <span data-bind="visible: incompleteTasks().length == 0"> - it's beer time!</span>
+            </label>
+        </div>
+    </div> -->
+
+    <hr>
+
+    <div class="row">
+        <div class="col-md-6 input-field">
+            <form class="form-inline" data-bind="submit: searchSamples">
+                <div class="form-group">
+                    <label for="sample_ids"> Sample IDs: </label>
+                    <input data-bind="value: newSampleText" placeholder="E-MTAB-3173" class="form-control" aria-describedby="helpBlock" name="sample_ids" type="text" class="validate"/>
+                    <button type="submit" class="btn btn-primary btn-sm">Submit</button>
+                    <span id="helpBlock" class="help-block">Enter a Search term or accession in quotes.</span>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- <div class="row">
+        <div class="col-md-4">
+            <ul data-bind="foreach: samples, visible: samples().length > 0">
+               <div>
+                    <label> Accession: <span data-bind="text: accession">&nbsp;</label>
+                </div>
+                <div>
+                     <label> Name: <span data-bind="text: name">&nbsp;</label>
+                </div>
+            </ul>
+        </div>
+    </div> -->
+
+    <form action="{{ url_for('process_samples') }}" method="post">
+    <!-- TODO: Work out KnockoutJS strategy to pass data back to Flask -->
+   <!--  <form data-bind="submit: sendToGalaxy"> -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="panel-group" data-bind="foreach: samples, visible: samples().length > 0">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <div class="panel-title">
+                            <input type="checkbox" name="check" id="test-1234" data-bind="checked: isDone, value: accession"/>
+                            <label><span class="h4" data-bind="text: accession">&nbsp;</span></label>
+                            <label>&nbsp;| &nbsp;</label>
+                            <label><span class="h4" data-bind="text: name">&nbsp;</span></label>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <label> Description: <span data-bind="text: description">&nbsp;</span></label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <label> Number of samples selected:  
+                <b data-bind="text: checkedSamples().length">&nbsp;</b>
+                <span data-bind="visible: checkedSamples().length >= 1"> - samples selected</span>
+            </label>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div>
+                <button type="submit" class="btn btn-primary btn-sm" data-bind="visible: checkedSamples().length >= 1"> Submit to Galaxy</button>
+            </div>
+        </div>
+    </div>
+    </form>
+
+
+    <br><br>
+</div>
+
+</div>
+
+<!-- Knockout Script -->
+<script type="text/javascript">
+function Task(data) {
+    this.title = ko.observable(data.title);
+    this.isDone = ko.observable(data.isDone);
+}
+
+
+function TaskListViewModel() {
+    // Data
+    var self = this;
+    self.tasks = ko.observableArray([]);
+    self.newTaskText = ko.observable();
+    self.incompleteTasks = ko.computed(function() {
+        return ko.utils.arrayFilter(self.tasks(), function(task) { return !task.isDone() });
+    });
+
+    // Operations
+    self.addTask = function() {
+        self.tasks.push(new Task({ title: this.newTaskText() }));
+        self.newTaskText("");
+    };
+    self.removeTask = function(task) { self.tasks.remove(task) };
+
+    // Load initial state from server, convert it to Task instances, then populate self.tasks
+    $.getJSON("/tasks", function(allData) {
+        var mappedTasks = $.map(allData, function(item) { return new Task(item) });
+        self.tasks(mappedTasks);
+    });
+}
+
+
+// Display results of Sample search
+function Sample(data) {
+    this.isDone = ko.observable(data.isDone);
+    this.accession = ko.observable(data.accession)
+    this.name = ko.observable(data.name)
+    this.description = ko.observable(data.description)
+    // this.title = ko.observable(data.title)
+    // this.isDone = ko.observable(data.isDone);
+}
+
+function SampleListViewModel() {
+    // Data
+    var self = this;
+    self.samples = ko.observableArray([]);
+    self.newSampleText = ko.observable();
+    self.checkedSamples = ko.computed(function() {
+        return ko.utils.arrayFilter(self.samples(), function(sample) { return sample.isDone() });
+    });
+
+    self.searchSamples = function () {
+        console.log("Search samples...")
+        $.getJSON('/search_input', {
+            sample_ids: $('input[name="sample_ids"]').val(),
+      }, function(allData) {
+            console.log(allData)
+            var mappedSamples = $.map(allData, function(item) { return new Sample(item) });
+            // console.log(mappedSamples)
+            self.samples(mappedSamples);
+        })
+    };
+
+    // TODO: Not working yet
+    self.sendToGalaxy = function() {
+        console.log("Send data to Galaxy!")
+        // Get sample accessions to pass to Flask function OR just get from POST in Flask method???
+        $.post('/process_samples', {
+            // javascript_data: self.checkedSamples() 
+        });
+
+    }
+}
+
+// ko.applyBindings(new TaskListViewModel());
+ko.applyBindings(new SampleListViewModel());
+</script>
+
+</body>
+</html>
